@@ -12,7 +12,8 @@ Each unit should answer one primary question:
 - **`services/` — policy and workflows.** Own business decisions, orchestration, transactions, and domain transitions. Depend on contracts for persistence and integrations, not on SQL, HTTP, SDKs, or global singletons.
 - **`repositories/` — owned persistence.** Read and write the application's database, files, or durable state. Hide SQL, ORM, storage schemas, locking, and persistence mechanics behind a consumer-relevant contract.
 - **`clients/` — external integrations.** Translate calls to third-party services and provider protocols behind a stable application-facing contract. Translate provider data and errors before they escape.
-- **`models/` — meaningful data shapes.** Keep entities and value objects precise. Reuse a shape when its semantics are truly the same; introduce persistence or request/response DTOs when fields, trust, lifecycle, or visibility differ.
+- **`model/` — meaningful data definitions.** Organize domain, application, API, and persistence models by context as defined in [modeling.md](modeling.md).
+- **`port/` — behavioral contracts.** Keep inbound and outbound dependency capabilities separate from data definitions as defined in [modeling.md](modeling.md).
 - **`transport/` — wire mechanics.** Own HTTP, WebSocket, RPC, gRPC, SSE, serialization, connection lifecycle, retries, reconnects, and protocol-level authentication. It knows how bytes move, not what the business decides.
 - **`middleware/` — cross-cutting delivery pipeline.** Own concerns such as request authentication, correlation, logging, and protocol-level error mapping that consistently wrap many controllers.
 - **`config/` — constants and runtime settings.** Centralize constants, catalogs, defaults, flags, and validated environment values as defined in [configuration.md](configuration.md). Keep dependency construction in the entrypoint or composition root.
@@ -54,7 +55,7 @@ Controllers, repositories, and clients are boundary adapters in different direct
 - Is it protocol, serialization, retry, or connection machinery? Put it in transport.
 - Is it a constant, catalog, flag, default, or environment value? Put it in config.
 - Is it dependency construction, registration, or startup? Put it at the entrypoint/composition root.
-- Is it a data shape? Place it with the layer that owns its meaning; split boundary DTOs only when semantics genuinely differ.
+- Is it a data definition or behavioral contract? Classify it using [modeling.md](modeling.md).
 - Is it pure and broadly reused? Put it in a dependency-light shared module only when no semantic owner is better.
 
 If one file answers several of these questions, split it along those boundaries.
@@ -70,7 +71,8 @@ backend/
     market-data/
   repositories/
   clients/
-  models/
+  model/
+  port/
   transport/
   middleware/
   config/

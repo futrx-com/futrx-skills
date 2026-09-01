@@ -17,7 +17,8 @@ Each unit should answer one primary question:
 - **`state/context/` — scoped access and injection.** Provide already-constructed stores and services to the relevant UI subtree and prevent prop drilling. Context owns scoping and access, not business logic or a second copy of state. UI code does not consume raw context; hooks or the framework-equivalent adapter do. Providers are assembled at the app composition boundary.
 - **`api/` — server-facing application calls.** Expose domain-meaningful operations, select endpoints, validate/map request and response DTOs, and translate server errors into frontend-facing results. Do not own rendering or transport mechanics.
 - **`transport/` — client wire mechanics.** Own generic HTTP, WebSocket, RPC, serialization, request cancellation, reconnect, and protocol-level authentication behavior. It must not know screen or business meaning.
-- **`models/` — frontend-owned shapes.** Hold client domain and view models whose semantics belong to the frontend. Import shared API contract types only at the API boundary; map them when the frontend model has different lifecycle or meaning.
+- **`model/` — frontend-owned data definitions.** Organize domain, application, API, and persistence models by context as defined in [modeling.md](modeling.md).
+- **`port/` — behavioral contracts.** Define narrow service dependencies, including API and store capabilities, as described in [modeling.md](modeling.md).
 - **`app/` — composition.** Construct transports, APIs, services, and stores; inject narrow dependencies; assemble routes and context providers; and connect them to screens. Keep construction out of hooks, services, stores, and components.
 - **`config/` — public constants and runtime settings.** Centralize constants, catalogs, defaults, flags, and validated public environment values as defined in [configuration.md](configuration.md). Construction remains in `app/`.
 - **`shared/` — dependency-light frontend utilities.** Hold genuinely reusable pure helpers and primitives. It must not become a dumping ground for feature state, API calls, or components with hidden application dependencies.
@@ -58,6 +59,7 @@ Avoid a cycle between services and stores. Prefer a consumer-owned store port pa
 - Does it name a backend operation or map a request/response? Put it in API.
 - Is it protocol, cancellation, serialization, reconnect, or authentication mechanics? Put it in transport.
 - Does it construct dependencies or assemble providers, routes, state owners, and screens? Put it at the app/composition boundary.
+- Is it a data definition or behavioral contract? Classify it using [modeling.md](modeling.md).
 - Is the state private to one component's interaction and irrelevant elsewhere? Keep it local instead of promoting it to a global store.
 - Is it pure and reused across unrelated features? Put it in shared only when no feature or semantic owner is clearer.
 
@@ -68,7 +70,8 @@ If one component or hook answers several of these questions, split it along pres
 ```text
 frontend/
   config/
-  models/
+  model/
+  port/
   transport/
   api/
   services/

@@ -25,6 +25,7 @@ Determine the changed deployment unit before diagnosing or editing, then read th
 - For browser or client UI, components, hooks or equivalent presentation adapters, frontend services, stores, context, API adapters, or client-side transport, read [references/frontend.md](references/frontend.md).
 - For a full-stack change, shared API contract, or move across the client/server seam, read both references.
 - For constants, catalogs, feature flags, environment values, or runtime settings, also read [references/configuration.md](references/configuration.md).
+- For public data definitions, DTOs, read models, storage records, or behavioral dependency contracts, also read [references/modeling.md](references/modeling.md).
 - For a library or tool that is neither frontend nor backend, use the shared rules below and the repository's closest valid local architecture. Read a reference only when its boundary model actually applies.
 
 
