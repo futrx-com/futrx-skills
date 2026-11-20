@@ -1,145 +1,57 @@
 ---
 name: code-refactorer
-description: "An opinionated skill that is used to restructure existing, working frontend or backend code into clear layers with accurate SOLID while keeping behavior identical. Use when asked to refactor, clean up, decouple, split a god class or component, remove duplication, introduce dependency injection, or reorganize code. This is for behavior-preserving restructuring, not feature work, bug fixing, rewrites, or broad test-suite creation."
+description: "Refactor code snippet or codebase that already exists and works. Use for architecture reviews, separating responsibilities, and structural cleanup across software types. Improve its structure aggressively while preserving every observable behavior."
 ---
 
-# Code Refactorer
+# Code Architecture
 
-## Mission
+Follow the following steps for your end to end flow:
 
-- Refactor code that already exists and works. 
-- Improve its structure aggressively while preserving every observable behavior: outputs, side effects, errors, ordering, and timing. 
-- A structural change that leaves the requested smell in place is incomplete; a change in behavior is a rewrite, not a refactor.
-- Stay inside the code the user asked to restructure. 
-- If you discover a bug or missing feature, report it without folding the fix into the refactor.
-- If a correctness change is unavoidable, stop and make the behavior change an explicit, separately authorized task.
+## 1. Understand the current design
 
-## References
-
-**Do not load the unrelated reference by default.**
-
-Determine the changed deployment unit before diagnosing or editing, then read the applicable reference completely:
-
-- Folder names in the references are examples; responsibility ownership and dependency direction are the constraints.
-- For server processes, workers, persistence, controllers, services, integrations, or other backend code, read [references/backend.md](references/backend.md).
-- For browser or client UI, components, hooks or equivalent presentation adapters, frontend services, stores, context, API adapters, or client-side transport, read [references/frontend.md](references/frontend.md).
-- For a full-stack change, shared API contract, or move across the client/server seam, read both references.
-- For constants, catalogs, feature flags, environment values, or runtime settings, also read [references/configuration.md](references/configuration.md).
-- For public data definitions, DTOs, read models, storage records, or behavioral dependency contracts, also read [references/modeling.md](references/modeling.md).
-- For a library or tool that is neither frontend nor backend, use the shared rules below and the repository's closest valid local architecture. Read a reference only when its boundary model actually applies.
+1. Read the code in scope, its callers, and relevant tests.
+2. Identify each part's job, its dependencies, and how it handles data, state, and side effects.
+3. Record each structural problem in scope with `file:line`, the responsibility involved, and why it is a problem.
+4. Inspect Git history - only if needed - to collect more evidence on the current design rationale.
+5. Record current behavior, existing test failures, and the checks you'll use to verify behavior stays the same, under `{codebase main's directory}/.refactor/session_{timestamp}`. Run the [structural checks](references/structural-checks.md) before editing and save the baseline in that session.
+6. If you discover a bug or missing feature, record it without folding the fix into the refactor, then report it.
+7. If a correctness change is unavoidable, stop and make the behavior change an explicit, separately authorized task.
 
 
-For repositories containing both deployment units, keep them independently buildable and let them meet only through an explicit API contract. The frontend must not import backend services, repositories, database rows, or provider SDK types. Validate and map boundary data so internal churn stays on its owning side.
+## 2. Choose the layers
 
-## Behavior is frozen
+1. After completing step 1, read [SOLID](references/foundations/solid.md), [Main layers](references/foundations/main-layers.md), and [Lean design](references/foundations/lean-design.md).
+2. Use the findings from step 1 and the subset table in Main layers to choose the layers each part needs. Mixed software can use different subsets for different parts.
+3. Read a matching reference in `references/software-types/` only when needed to resolve a remaining design question. Do not automatically open every linked file.
+4. Apply SOLID and lean design to the chosen structure and briefly explain the layer choices.
 
-- Before moving code, name the observable behavior being preserved and how the existing compiler, tests, build, or focused runtime check proves it. 
-- Re-run the narrowest meaningful check after each structural move and run the repository's full relevant validation before finishing.
-- Never smuggle a bug fix into a refactor. 
-- *Preserve bugs that are part of current behavior unless the user separately authorizes fixing them.
+## 3. Plan the refactor
 
-## Understand the current design
+1. Map each responsibility to its current and intended owner in the chosen layers, showing affected files and dependency direction.
+2. Identify the relevant layer or SOLID principle and the smallest structural change that resolves each problem. Order changes into small steps with behavior checks.
+3. Use the shared folder names from Main layers. Consult the matching software-type reference when needed, and include a small tree of affected files, folders, and moves in the plan.
+4. Save the map and plan as `plan.md` in the same `.refactor/session_{timestamp}/` folder used in step 1.
 
-Read before writing, but read to act:
+## 4. Implement
 
-- Resolve the exact requested scope and the callers, contracts, and flows it touches.
-- Read applicable repository instructions and architecture documentation.
-- Read the target files, controlling interfaces and types, and the closest valid sibling in full.
-- Find existing tests and build/type-check commands that cover the behavior.
-- Map each responsibility to its present owner and its intended owner in the selected reference.
-- Prefer an established valid local boundary over imposing generic folder names. 
-- If the local pattern is itself the requested smell, explain why before replacing it.
-- Inspect Git status and preserve unrelated user changes. 
-- Never sweep unrelated cleanup into the refactor.
+1. Follow the session plan, one responsibility at a time. Preserve outputs, side effects, errors, ordering, and observable timing.
+2. Before each change, read only the implementation references that apply below. Skip unrelated references.
+3. Update callers and dependency setup, remove superseded code, and run focused behavior checks after each move.
+4. Commit each coherent, verified change following [Commits](references/implementation/commits.md).
 
-Diagnose concretely: name each smell with `file:line`, the responsibility or principle it violates, and the smallest structural move that resolves it.
+| When changing | Read |
+|---|---|
+| Names of variables, functions, types, or modules | [Naming](references/implementation/naming.md) |
+| Data types, their methods, or contracts | [Modelling](references/implementation/modelling.md) |
+| Responsibility ownership, dependencies, or resource lifecycle | [Ownership and boundaries](references/implementation/ownership-and-boundaries.md) |
+| Files, packages, modules, namespaces, imports, or exports | [Module structure](references/implementation/module-structure.md) |
+| Error handling, translation, retries, fallbacks, or failure logging | [Errors and failures](references/implementation/errors-and-failures.md) |
+| Async or concurrent code, locks, transactions, cancellation, or timeouts | [Concurrency and transactions](references/implementation/concurrency-and-transactions.md) |
+| Constants, catalogs, defaults, flags, or runtime settings | [Configuration](references/implementation/configuration.md) |
+| Extractions, moves, renames, or contract migrations | [Safe moves](references/implementation/safe-moves.md) |
 
-## Shared design pressure tests
+## 5. Review and report
 
-### Clarity and ownership
-
-- A unit should have one coherent owner and reason to change. Split policy, presentation, persistence, transport, and lifecycle when different actors drive them.
-- Keep public contracts small and intentional. Do not widen an API merely to make a move convenient.
-- Make invalid states difficult or impossible to construct with precise types and invariant-preserving operations.
-- Keep I/O, DOM, network, storage, environment, and time at explicit boundaries. Keep pure decisions free of those details.
-
-### Naming
-
-- Name intent, domain meaning, cost, and effects: `activeUsers`, `fetchOrders`, `commit`, `timeoutMs`.
-- Use verbs for actions, nouns for values, positive predicates for booleans, and one domain term per concept.
-- Remove vague suffixes such as `Manager`, `Helper`, `Util`, `Processor`, and `Impl` when a precise role exists.
-- If a cohesive unit cannot be named cleanly, it probably owns multiple responsibilities.
-- Use a type-aware rename so references move together.
-
-### Lean design
-
-- Reuse or extend an existing pattern only when it makes the total system smaller and clearer.
-- Do not add speculative flags, hooks, interfaces, registries, layers, or compatibility shims.
-- Delete pass-through wrappers that add no semantic boundary.
-- A little repeated syntax can be cheaper than an abstraction; repeated policy, lifecycle, or branching signals a missing owner.
-- Remove dead code, obsolete comments, unused parameters, and temporary delegation once the safe move is complete.
-
-### Types and encapsulation
-
-- Prefer exact types, discriminated states, and validated boundary values over `any`, loose bags, broad strings, casts, or compiler suppressions.
-- Put an invariant and the operations that protect it under one semantic owner with a small public surface.
-- Shared mutable state usually deserves a cohesive object, class, or store rather than free functions that let callers maintain invariants manually. A hook or equivalent presentation adapter may expose that owner to UI code, but should not become a second state owner. Follow the language and framework's established idiom; do not force classes into a functional UI or free functions into an object-oriented domain model.
-- Keep pure stateless transforms simple. Export only what callers genuinely support.
-
-### SOLID, accurately
-
-Use SOLID as a diagnostic, not permission to add abstraction:
-
-- **Single Responsibility:** one actor or reason to change, not one method or arbitrary file size.
-- **Open/Closed:** prefer a strategy, registry, or polymorphic contract only for a demonstrated family of variants that otherwise requires repeated central edits.
-- **Liskov Substitution:** every implementation must honor the full contract without caller type checks, no-op methods, or unsupported branches.
-- **Interface Segregation:** expose role-specific contracts so callers and implementations do not depend on capabilities they do not use.
-- **Dependency Inversion:** policy and details meet at the smallest justified abstraction; construct the detail at a composition root.
-
-An interface earns its place through a real policy/detail boundary, supported variant, or useful test seam. YAGNI outranks speculative SOLID.
-
-## Structural smells to hunt
-
-- Import-time startup of sockets, timers, connections, or registration. Move lifecycle behind explicit construction and `start`/`stop` or disposal.
-- A god unit combining lifecycle, mapping, policy, rendering, persistence, and I/O. Extract collaborators along ownership boundaries.
-- Duplicated domain decisions or transforms. Establish one semantic owner rather than another generic utility bucket.
-- Missing teardown for timers, subscriptions, sockets, or other resources.
-- Inconsistent boundary error mapping or invalid input silently discarded.
-- Concrete infrastructure, protocol, framework, or provider types leaking into policy contracts.
-- Application constants or runtime settings defined outside the centralized configuration owner.
-- Defensive branches for impossible internal states. Fix the model or owner instead.
-
-## Make mechanically safe moves
-
-- **Extract:** copy the responsibility to its new owner, make the old site delegate, verify, migrate callers, then remove the old body.
-- **Change a contract:** add the new shape alongside the old, migrate callers in bounded steps, and delete the old shape only when unreferenced.
-- **Introduce a seam:** derive the smallest contract from actual consumer usage, make the concrete satisfy it, inject it, and wire it at the composition root.
-- **Replace conditional dispatch:** reproduce the current branches behind the new dispatch, move one branch at a time, and remove the old conditional only when empty.
-- **Move or rename:** use language-aware tooling when available; let the compiler identify affected references and fix every result.
-
-Keep moves small and verified. Always commit your work so you can keep track of the changes history. Follow [references/workflow/commits.md](references/workflow/commits.md); otherwise leave changes uncommitted.
-
-## Verify behavior
-
-- Type-check or compile after each move in typed code.
-- Run existing lint, build, and tests using the repository's own commands; use the narrowest relevant check first.
-- Add a small characterization test only when moving untyped or uncovered logic whose output could silently drift. 
-- Pin current behavior, bugs included; do not build a new suite.
-- Inspect risks tests often miss: ordering, error type and text, logs, `null` versus `undefined`, precision, async sequencing, resource lifecycle, and side-effect count.
-- If a check cannot run, state exactly which proof is missing. Never imply that passing compilation alone proves all runtime behavior.
-
-## Finish cleanly
-
-Review the final diff as the next maintainer:
-
-- Does each changed responsibility have one obvious owner in the selected frontend or backend architecture?
-- Did dependencies move in the intended direction without leaking concrete details?
-- Is the result smaller or clearer, with no temporary adapters, dead code, or broadened public surface left behind?
-- Did every caller move, and did relevant verification pass?
-- Are unrelated files and pre-existing user changes untouched?
-
-Report:
-
-1. **Smell → principle → fix**, with `file:line` evidence.
-2. **Behavior preserved by**, naming the checks actually run.
-3. **Deliberately not done**, including out-of-scope smells, unverified risks, and any behavior changes that need separate authorization.
+1. Run all tests and fix any issue arises.
+2. Rerun the [structural checks](references/structural-checks.md) against the same scope and session. Review the comparison and report unsupported or incomplete checks.
+3. Report back what have you done in a concise way.

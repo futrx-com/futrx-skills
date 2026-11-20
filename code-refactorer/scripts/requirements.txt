@@ -1,0 +1,3 @@
+lizard==1.25.0
+pathspec==1.1.1
+Pygments==2.21.0
